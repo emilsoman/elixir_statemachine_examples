@@ -1,24 +1,19 @@
 # SecretQuestion
 
-**TODO: Add description**
+## Usage
 
-## Installation
+```
+$ cd secret_question
+$ mix deps.get
+$ iex -S mix
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+# Start the state machine
+iex> SecretQuestion.start
 
-  1. Add `secret_question` to your list of dependencies in `mix.exs`:
+# Print the secret question and answer the question
+# to unlock
+iex> SecretQuestion.unlock
 
-    ```elixir
-    def deps do
-      [{:secret_question, "~> 0.1.0"}]
-    end
-    ```
-
-  2. Ensure `secret_question` is started before your application:
-
-    ```elixir
-    def application do
-      [applications: [:secret_question]]
-    end
-    ```
-
+# Once unlocked, set the new secret question and answer
+iex> SecretQuestion.lock
+```
