@@ -9,7 +9,7 @@ defmodule HttpServer.Parser do
   # and sends a response echoing the request received
   def start(socket) do
     {:ok, pid} = GenStateMachine.start(__MODULE__, socket)
-    GenStateMachine.cast(pid, :parse_request_line)
+    GenStateMachine.cast(pid, {:parse_request_line, read_line_from_socket(socket)})
   end
 
   #### State machine callback implementation ####
@@ -20,27 +20,24 @@ defmodule HttpServer.Parser do
     {:ok, :started, socket}
   end
 
-  def started(:cast, :parse_request_line, socket) do
-    request_line = read_line_from_socket(socket)
+  def started(:cast, {:parse_request_line, request_line}, socket) do
     [method, uri, "HTTP/1.1"] = request_line |> String.trim |> String.split(" ")
     request = %{
       method: method,
       uri: uri,
       headers: %{}
     }
-    {:next_state, :parsed_request_line, {socket, request}, {:next_event, :internal, :parse_header_line}}
+    {:next_state, :parsed_request_line, {socket, request}, {:next_event, :internal, {:parse_header_line, read_line_from_socket(socket)}}}
   end
 
-  def parsed_request_line(:internal, :parse_header_line, {socket, request}) do
-    next_line = read_line_from_socket(socket)
-    case next_line do
-      "\r\n" ->
-        {:next_state, :parsed_headers, {socket, request}, {:next_event, :internal, :send_response}}
-      header_line ->
-        [name, value] = header_line |> String.trim |> String.split(": ")
-        request =  put_in(request, [:headers, name], value)
-        {:keep_state, {socket, request}, {:next_event, :internal, :parse_header_line}}
-    end
+  def parsed_request_line(:internal, {:parse_header_line, "\r\n"}, {socket, request}) do
+    {:next_state, :parsed_headers, {socket, request}, {:next_event, :internal, :send_response}}
+  end
+
+  def parsed_request_line(:internal, {:parse_header_line, header_line}, {socket, request}) do
+    [name, value] = header_line |> String.trim |> String.split(": ")
+    request =  put_in(request, [:headers, name], value)
+    {:keep_state, {socket, request}, {:next_event, :internal, {:parse_header_line, read_line_from_socket(socket)}}}
   end
 
   def parsed_headers(:internal, :send_response, {socket, request}) do

@@ -27,22 +27,22 @@ States and events of the HTTP parser state machine:
 |                                |
 +---------------+----------------+
                 |
-                |  Event: :parse_request_line
+                |  Event: {:parse_request_line, request_line}
                 |
                 |
 +---------------v----------------+
 |                                <--------+
 |  State: :parsed_request_line   |        |
-|  Data: socket, request         |        | Event: :parse_header_line
+|  Data: {socket, request}       |        | Event: {:parse_header_line, header_line}
 |                                +--------+
 +---------------+----------------+
                 |
-                |  Event: :parse_header_line
+                |  Event: {:parse_header_line, "\r\n"}
                 |
 +---------------v----------------+
 |                                |
 |  State: :parsed_headers        |
-|  Data: socket, request         |
+|  Data: {socket, request}       |
 |                                |
 +---------------+----------------+
                 |
