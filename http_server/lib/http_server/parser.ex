@@ -27,17 +27,28 @@ defmodule HttpServer.Parser do
       uri: uri,
       headers: %{}
     }
-    {:next_state, :parsed_request_line, {socket, request}, {:next_event, :internal, {:parse_header_line, read_line_from_socket(socket)}}}
+
+    {
+      :next_state, :parsed_request_line, {socket, request},
+      {:next_event, :internal, {:parse_header_line, read_line_from_socket(socket)}}
+    }
   end
 
   def parsed_request_line(:internal, {:parse_header_line, "\r\n"}, {socket, request}) do
-    {:next_state, :parsed_headers, {socket, request}, {:next_event, :internal, :send_response}}
+    {
+      :next_state, :parsed_headers, {socket, request},
+      {:next_event, :internal, :send_response}
+    }
   end
 
   def parsed_request_line(:internal, {:parse_header_line, header_line}, {socket, request}) do
     [name, value] = header_line |> String.trim |> String.split(": ")
     request =  put_in(request, [:headers, name], value)
-    {:keep_state, {socket, request}, {:next_event, :internal, {:parse_header_line, read_line_from_socket(socket)}}}
+
+    {
+      :keep_state, {socket, request},
+      {:next_event, :internal, {:parse_header_line, read_line_from_socket(socket)}}
+    }
   end
 
   def parsed_headers(:internal, :send_response, {socket, request}) do
