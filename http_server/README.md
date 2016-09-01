@@ -1,24 +1,52 @@
 # HttpServer
 
-**TODO: Add description**
+This is a simple HTTP server that echoes the incoming requests.
 
-## Installation
+## Usage
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+    $ mix deps.get
+    $ iex -S mix
 
-  1. Add `http_server` to your list of dependencies in `mix.exs`:
+This starts the HTTP server on port 1234. Now use curl or browser (or any other HTTP client)
+to send it a request.
 
-    ```elixir
-    def deps do
-      [{:http_server, "~> 0.1.0"}]
-    end
-    ```
+    curl -v http://localhost:1234/foo/bar
 
-  2. Ensure `http_server` is started before your application:
 
-    ```elixir
-    def application do
-      [applications: [:http_server]]
-    end
-    ```
+States and events of the HTTP parser state machine:
 
+```
+
+              start
+                +
+                |
++---------------v----------------+
+|                                |
+|  State: :started               |
+|  Data: socket                  |
+|                                |
++---------------+----------------+
+                |
+                |  Event: :parse_request_line
+                |
+                |
++---------------v----------------+
+|                                <--------+
+|  State: :parsed_request_line   |        |
+|  Data: socket, request         |        | Event: :parse_header_line
+|                                +--------+
++---------------+----------------+
+                |
+                |  Event: :parse_header_line
+                |
++---------------v----------------+
+|                                |
+|  State: :parsed_headers        |
+|  Data: socket, request         |
+|                                |
++---------------+----------------+
+                |
+                |  Event: :send_response
+                v
+              stop
+```
